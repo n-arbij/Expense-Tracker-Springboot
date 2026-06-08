@@ -1,7 +1,9 @@
 package com.fintech.expense_planner.service;
 
+import com.fintech.expense_planner.repository.BudgetRepository;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,11 +20,14 @@ import com.fintech.expense_planner.repository.CategoryRepository;
 import com.fintech.expense_planner.repository.TransactionRepository;
 import com.fintech.expense_planner.specification.TransactionSpecification;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
+    private final NotificationService notificationService;
+    private final BudgetRepository budgetRepository;
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
     private final Helper helper;
@@ -70,7 +75,10 @@ public class TransactionService {
         return transactionRepository.findAll(spec);
     }
 
+    @Transactional
     public void createTransaction(TransactionDto.Create transcationDto){
+        User user = helper.getLoggedInUser();
+
         Category category = categoryRepository.findById(transcationDto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
         Transaction transaction = new Transaction();
@@ -81,6 +89,10 @@ public class TransactionService {
         transaction.setDate(LocalDate.now());
         transaction.setUser(helper.getLoggedInUser());
         transactionRepository.save(transaction);
+
+        if(transaction.getType() == TransactionType.EXPENSE) {
+            checkBudgetAlert(user, transaction);
+        }
     }
 
     public void updateTransaction(UUID id, TransactionDto.Update transactionDto){
@@ -99,5 +111,20 @@ public class TransactionService {
         Transaction transaction = getTransactionById(id);
         transaction.setDeleted(true);
         transactionRepository.save(transaction);
+    }
+
+    private void checkBudgetAlert(User user, Transaction transaction){
+        budgetRepository.findByUserAndCategoryIdAndMonth(
+            user,
+            transaction.getCategory().getId(),
+            YearMonth.from(transaction.getDate())
+        ).ifPresent( budget -> {
+            BigDecimal spent = transactionRepository.sumSpentByUserAndCategoryAndMonth(
+                user,
+                transaction.getCategory(),
+                YearMonth.from(transaction.getDate()).toString()
+            );
+            notificationService.checkAndNotify(user, budget, spent);
+        });
     }
 }
