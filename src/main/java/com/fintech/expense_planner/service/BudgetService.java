@@ -43,7 +43,9 @@ public class BudgetService {
                     .orElseThrow(() -> new RuntimeException("Category not found"));
 
         budgetRepository.findByUserAndCategoryIdAndMonth(user, budgetDto.getCategoryId(), budgetDto.getMonth())
-                    .orElseThrow(() -> new RuntimeException("Budget already exists for this category and month"));
+                    .ifPresent(b -> {
+                        throw new RuntimeException("Budget already exists for this category and month");
+                    });
 
 
         Budget budget = new Budget();
