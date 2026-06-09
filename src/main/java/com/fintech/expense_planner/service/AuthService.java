@@ -11,6 +11,7 @@ import com.fintech.expense_planner.dto.UserDto.RegisterDto;
 import com.fintech.expense_planner.model.User;
 import com.fintech.expense_planner.repository.UserRepository;
 import com.fintech.expense_planner.util.JwtUtil;
+import com.fintech.expense_planner.util.PasswordValidatorUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -20,6 +21,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
+    private final PasswordValidatorUtil passUtil;
     private final JwtUtil jwtUtil;
 
     public AuthResponse register(RegisterDto registerDto) {
@@ -30,6 +32,8 @@ public class AuthService {
         if (userRepository.existsByEmail(registerDto.getEmail())) {
             throw new RuntimeException("Email already in use");
         }
+
+        passUtil.validate(registerDto.getPassword());
 
         User user = new User();
         user.setUsername(registerDto.getUsername());
