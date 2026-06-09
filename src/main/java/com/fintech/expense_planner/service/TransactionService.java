@@ -14,9 +14,12 @@ import com.fintech.expense_planner.dto.TransactionDto;
 import com.fintech.expense_planner.helper.Helper;
 import com.fintech.expense_planner.model.Transaction;
 import com.fintech.expense_planner.model.Category;
+import com.fintech.expense_planner.model.Goal;
+import com.fintech.expense_planner.model.GoalStatus;
 import com.fintech.expense_planner.model.TransactionType;
 import com.fintech.expense_planner.model.User;
 import com.fintech.expense_planner.repository.CategoryRepository;
+import com.fintech.expense_planner.repository.GoalRepository;
 import com.fintech.expense_planner.repository.TransactionRepository;
 import com.fintech.expense_planner.specification.TransactionSpecification;
 
@@ -30,6 +33,7 @@ public class TransactionService {
     private final BudgetRepository budgetRepository;
     private final TransactionRepository transactionRepository;
     private final CategoryRepository categoryRepository;
+    private final GoalRepository goalRepository;
     private final Helper helper;
 
     public Transaction getTransactionById(UUID id){
@@ -92,6 +96,28 @@ public class TransactionService {
 
         if(transaction.getType() == TransactionType.EXPENSE) {
             checkBudgetAlert(user, transaction);
+        } else if(transaction.getType() == TransactionType.SAVING){
+            Goal goal = goalRepository.findById(transcationDto.getGoalId()).orElse(new Goal());
+
+            if(!goal.getUser().getId().equals(user.getId())) {
+                throw new RuntimeException("Access Denied");
+            }
+
+            if(goal.getStatus() != GoalStatus.IN_PROGRESS){
+                throw new RuntimeException("Cannot save to a completed or cancelled goal");
+            }
+
+            transaction.setGoal(goal);
+            goal.setSavedAmount(goal.getSavedAmount().add(transaction.getAmount()));
+
+            if(goal.getSavedAmount().compareTo(goal.getTargetAmount()) >= 0){
+                goal.setStatus(GoalStatus.COMPLETE);
+                notificationService.sendGoalNotification(user, goal, true);
+            } else {
+                notificationService.sendGoalNotification(user, goal, false);
+            }
+
+            goalRepository.save(goal);
         }
     }
 

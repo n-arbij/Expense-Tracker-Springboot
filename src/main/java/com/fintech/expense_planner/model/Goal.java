@@ -1,7 +1,7 @@
 package com.fintech.expense_planner.model;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import jakarta.persistence.Column;
@@ -17,11 +17,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@NoArgsConstructor
-@AllArgsConstructor
 @Data
-public class Transaction {
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+public class Goal {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -30,27 +30,22 @@ public class Transaction {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "goal_id", nullable = true)
-    private Goal goal;
+    @Column(nullable = false)
+    private String name;
 
     @Column(nullable = false)
-    private BigDecimal amount;
+    private BigDecimal targetAmount;
 
-    @Column(nullable = true)
-    private String description;
+    @Column(nullable = false)
+    private BigDecimal savedAmount;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TransactionType type;
-
-    @ManyToOne
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    private GoalStatus status;
 
     @Column(nullable = false)
-    private LocalDate date;
+    private boolean isDeleted;
 
-    private boolean isDeleted = false;
-
+    @Column(nullable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 }

@@ -21,6 +21,7 @@ public class TransactionDto {
         private String description;
         private TransactionType type;
         private UUID categoryId;
+        private UUID goalId;
     }
 
     @Data
@@ -29,6 +30,7 @@ public class TransactionDto {
         private String description;
         private TransactionType type;
         private UUID categoryId;
+        private UUID goalId;
     }
 
     @Data
@@ -40,6 +42,8 @@ public class TransactionDto {
         private TransactionType type;
         private UUID categoryId;
         private String categoryName;
+        private UUID goalId;
+        private String goalName;
         private LocalDate date;
     }
 }

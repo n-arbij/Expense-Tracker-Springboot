@@ -18,6 +18,8 @@ public class TransactionMapper {
             transaction.getType(),
             transaction.getCategory().getId(),
             transaction.getCategory().getName(),
+            transaction.getGoal().getId(),
+            transaction.getGoal().getName(),
             transaction.getDate()
         );
     }

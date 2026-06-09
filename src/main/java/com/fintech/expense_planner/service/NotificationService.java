@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import com.fintech.expense_planner.model.Budget;
+import com.fintech.expense_planner.model.Goal;
 import com.fintech.expense_planner.model.Notification;
 import com.fintech.expense_planner.model.NotificationType;
 import com.fintech.expense_planner.model.User;
@@ -57,6 +58,34 @@ public class NotificationService {
         notificationRepository.save(notification);
 
         // emailService.sendMail(user.getEmail(), "Budget Alert", message);
+    }
+
+    public void sendGoalNotification(User user, Goal goal, boolean isComplete){
+        String message;
+        NotificationType type;
+
+        if(isComplete){
+            message = String.format(
+                "Congratulations! You have reached your saving goal '%s' of %.2f!",
+                goal.getName(),
+                goal.getTargetAmount()
+            );
+            type = NotificationType.GOAL_COMPLETE;
+        } else {
+            double pct = goal.getSavedAmount()
+                            .divide(goal.getTargetAmount())
+                            .multiply(BigDecimal.valueOf(100))
+                            .doubleValue();
+
+            message = String.format(
+            "You have saved %.1f%% towards your goal '%s'. Keep going!",
+            pct,
+            goal.getName()
+            );
+            type = NotificationType.GOAL_PROGRESS;
+        }
+
+        saveAndSend(user, message, type);
     }
 
     public List<Notification> getUnread(User user){
