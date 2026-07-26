@@ -35,4 +35,10 @@ build/
 # Local configuration
 /src/main/resources/application.properties
 
+# env config
+.env
 
+# Maven files
+.mvn/
+mvnw
+mvnw.cmd
